@@ -81,6 +81,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirScout.CAT", "AirScout.CA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirScout.PlaneFeeds.Plugin.AirScoutServer", "AirScout.PlaneFeeds.Plugin.AirScoutServer\AirScout.PlaneFeeds.Plugin.AirScoutServer.csproj", "{692CAF08-26D0-4D41-9CAC-BDA8D8BE6125}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirScout.PlaneFeeds.UnitTest", "AirScout.PlaneFeeds.UnitTest\AirScout.PlaneFeeds.UnitTest.csproj", "{14AD1F3E-22FA-4E4A-A560-C9DB0F820F17}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
