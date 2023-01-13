@@ -1273,6 +1273,10 @@ namespace AirScout.PlaneFeeds.Plugin.FlexJSON
 
         private void AddElement(string key, dynamic el)
         {
+            if (el == null)
+            {
+                return;
+            }
             string typename = el.GetType().Name;
             if (typename.ToLower().Contains("dictionary"))
             {
@@ -1358,7 +1362,7 @@ namespace AirScout.PlaneFeeds.Plugin.FlexJSON
                 int count = 1;
                 foreach (dynamic e in el.Element.Values)
                 {
-                    if (e.GetType().IsPrimitive || (e.GetType().Name.ToLower() == "string"))
+                    if (e != null && ( e.GetType().IsPrimitive || (e.GetType().Name.ToLower() == "string") || (e.GetType().Name.ToLower() == "decimal")))
                     {
                         info[count] = e.ToString();
                     }
@@ -1375,8 +1379,7 @@ namespace AirScout.PlaneFeeds.Plugin.FlexJSON
                 int count = 1;
                 foreach (dynamic e in el.Element)
                 {
-                    string typename = e.GetType().Name;
-                    if (e.GetType().IsPrimitive || (typename.ToLower() == "string") || (typename.ToLower() == "decimal"))
+                    if (e != null && (e.GetType().IsPrimitive || (e.GetType().Name.ToLower() == "string") || (e.GetType().Name.ToLower() == "decimal")))
                     {
                         info[count] = e.ToString();
                     }
@@ -1393,8 +1396,7 @@ namespace AirScout.PlaneFeeds.Plugin.FlexJSON
                 int count = 1;
                 foreach (dynamic e in el.Element)
                 {
-                    string typename = e.GetType().Name;
-                    if (e.GetType().IsPrimitive || (typename.ToLower() == "string") || (typename.ToLower() == "decimal"))
+                    if (e != null && (e != e.GetType().IsPrimitive || (e.GetType().Name.ToLower() == "string") || (e.GetType().Name.ToLower() == "decimal"))) 
                     {
                         info[count] = e.ToString();
                     }
