@@ -75,6 +75,8 @@ namespace System.Net
                 do
                 {
                     count = stream.Read(buff, 0, buff.Length);
+                    if (count == 0)
+                        break;
                     trailer += Encoding.ASCII.GetString(buff, 0, buff.Length);
                     if (st.ElapsedMilliseconds > timeout)
                         throw new TimeoutException("Connection timed out.");
