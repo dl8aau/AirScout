@@ -1531,7 +1531,7 @@ namespace AirScout.PlaneFeeds.Plugin.FlexJSON
                     PlaneList.Add(info);
                 }
             }
-            // store the plane i nfo table as CSV, so that a user can determine which columns at which indices are needed
+            // store the plane info table as CSV, so that a user can determine which columns at which indices are needed
             // catch the exception here to continue grabbing planes if user left thge file open :-)
             string csvfilename = Path.Combine(TmpDirectory, "FlexJSON.csv");
             try
