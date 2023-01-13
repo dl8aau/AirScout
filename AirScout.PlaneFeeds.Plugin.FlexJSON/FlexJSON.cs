@@ -646,9 +646,23 @@ namespace AirScout.PlaneFeeds.Plugin.FlexJSON
                 return false;
             if (!IsInt(s))
             {
-                // maybe DateTime formatted
-                if (!s.ToCharArray().Any(c => "-_:".Contains(c)))
-                    return false;
+                // maybe double seconds.milliseconds?
+                if (IsDouble(s))
+                {
+                    double d;
+                    if (!double.TryParse(s, out d))
+                        return false;
+                    if (Math.Abs(now_int - Convert.ToInt64(d)) > 1000)
+                        return false;
+                    return true;
+                }
+                else
+                {
+                    // maybe DateTime formatted
+                    if (!s.ToCharArray().Any(c => "-_:".Contains(c)))
+                        return false;
+                    // TODO: what if it passes here?
+                }
             }
             // assuming int
             long l = 0;
@@ -821,6 +835,7 @@ namespace AirScout.PlaneFeeds.Plugin.FlexJSON
             // a 32bit integer containing seconds since 1970-01-01  
             // a 64bit ticks containing ticks[ms] since 1970-01-01
             // a valid DateTime string, like "yyyy-MM-dd HH:mm:ss"
+            // a decimal (double) containing seconds/ms since 1970-01-01
             // try to convert UNIX times first
             if ((s.Length >= 10) && IsInt(s))
             {
@@ -848,6 +863,22 @@ namespace AirScout.PlaneFeeds.Plugin.FlexJSON
                 {
                     //                    Console.WriteLine("[" + System.Reflection.MethodBase.GetCurrentMethod().Name + "]" + ex.Message + ": " + s);
                 }
+            }
+            try
+            {
+                if (IsDouble(s))
+                {
+                    // try to convert to seconds
+                    double d = System.Convert.ToDouble(s);
+                    long l = System.Convert.ToInt64(d * 1000.0);
+                    DateTime timestamp = new System.DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+                    timestamp = timestamp.AddMilliseconds(l);
+                    return timestamp;
+                }
+            }
+            catch (Exception ex)
+            {
+                //                    Console.WriteLine("[" + System.Reflection.MethodBase.GetCurrentMethod().Name + "]" + ex.Message + ": " + s);
             }
             // check for Standard DateTime notation
             try
