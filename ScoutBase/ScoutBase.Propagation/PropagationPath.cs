@@ -159,7 +159,7 @@ namespace ScoutBase.Propagation
             if (StepWidth <= 0)
                 return null;
             PropagationPoint[] d = new PropagationPoint[(int)Distance + 2];
-            // chek against localobstruction , if any
+            // check against localobstruction , if any
             double eps1_min = Math.Max(Eps1_Min, LocalObstruction);
             for (int i = 0; i < d.Length; i++)
             {
@@ -171,13 +171,13 @@ namespace ScoutBase.Propagation
         /// <summary>
         /// Returns a single info point in a given distance from location 1
         /// </summary>
-        /// <param name="lat">The latitude of the plane.</param>
+        /// <param name="dist">Distance on the path from location 1.</param>
         /// <returns>The info point.</returns>
         public PropagationPoint GetInfoPoint(double dist)
         {
             if (StepWidth <= 0)
                 return null;
-            // chek against localobstruction , if any
+            // check against localobstruction , if any
             double eps1_min = Math.Max(Eps1_Min, LocalObstruction);
             LatLon.GPoint p = LatLon.DestinationPoint(Lat1, Lon1, Bearing12, dist);
             return new PropagationPoint(
@@ -205,7 +205,7 @@ namespace ScoutBase.Propagation
         /// <param name="lat">The latitude of the plane.</param>
         /// <param name="lon">The longitude of the plane.</param>
         /// <param name="bearing">The bearing of the plane.</param>
-        /// <param name="maxdistance">The maximum allowed distance to return a valid intersection (-1: no limits, 0: automatcally adjuts to path distance /2).</param>
+        /// <param name="maxdistance">The maximum allowed distance to return a valid intersection (-1: no limits, 0: automatcally adjusts to path distance /2).</param>
         /// <returns>The intersection point, if any. Null if no intersection point exists or plane does not have a suitable altitude at intersection point</returns>
         /// <summary>
         public IntersectionPoint GetIntersectionPoint(double lat, double lon, double bearing, double maxdistance)
@@ -219,7 +219,7 @@ namespace ScoutBase.Propagation
             // get both distances to intersection point
             double dist1 = LatLon.Distance(Lat1, Lon1, p.Lat, p.Lon);
             double dist2 = LatLon.Distance(Lat2, Lon2, p.Lat, p.Lon);
-            // chek against localobstruction , if any
+            // check against localobstruction , if any
             double eps1_min = Math.Max(Eps1_Min, LocalObstruction);
             // get minimal altitude
             double min_H = Math.Max(ScoutBase.Core.Propagation.HeightFromEpsilon(h1, dist1, eps1_min, Radius), ScoutBase.Core.Propagation.HeightFromEpsilon(h2, dist2, Eps2_Min, Radius));

@@ -908,7 +908,7 @@ namespace AirScout
 
         private void LoadPlugins()
         {
-            // chek for planefeed plugins
+            // check for planefeed plugins
             Log.WriteMessage("Loading plugins...");
             // get major&minor version
             string mainversion = Assembly.GetExecutingAssembly().GetName().Version.ToString().Split('.')[0] + "." + Assembly.GetExecutingAssembly().GetName().Version.ToString().Split('.')[1];
@@ -1086,7 +1086,7 @@ namespace AirScout
             // check if band is BNONE --> set to 1.2G
             if (Properties.Settings.Default.Band == BAND.BNONE)
                 Properties.Settings.Default.Band = BAND.B1_2G;
-            // chekc if band settings are NULL --> set to default
+            // check if band settings are NULL --> set to default
             if (Properties.Settings.Default.Path_Band_Settings == null)
                 Properties.Settings.Default.Path_Band_Settings = new BandSettings(true);
             // check if watchlist in null --> create new
