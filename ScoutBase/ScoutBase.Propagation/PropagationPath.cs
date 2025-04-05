@@ -226,9 +226,10 @@ namespace ScoutBase.Propagation
             double qrb = LatLon.Distance(p.Lat, p.Lon, lat, lon);
             if (maxdistance < 0)
                 return new IntersectionPoint(p.Lat, p.Lon, qrb, min_H, dist1, dist2);
-            if ((maxdistance == 0) && (qrb > Distance / 2))
-                return null;
-            if (qrb < maxdistance)
+            if (maxdistance == 0) {
+                if (qrb > Distance / 2)
+                    return null;
+            } else if (qrb > maxdistance)
                 return null;
             return new IntersectionPoint(p.Lat, p.Lon, qrb, min_H, dist1, dist2);
         }
