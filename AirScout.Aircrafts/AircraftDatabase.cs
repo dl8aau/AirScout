@@ -2517,6 +2517,15 @@ namespace AirScout.Aircrafts
                 imin = i3;
             if ((i4 != null) && ((imin == null) || (i4.QRB < imin.QRB)))
                 imin = i4;
+            // it is the maximum angle seen from both sides that limits the reflection (vs. side-scatter), so scale
+            // maxdist to which side is closer to one end
+            if (imin!= null)
+            {
+                if (imin.Dist1 > imin.Dist2)
+                    maxdist *= 2*imin.Dist2 / ppath.Distance;
+                else
+                    maxdist *= 2*imin.Dist1 / ppath.Distance;
+            }
             // check hot planes which are very near the path first
             if ((imin != null) && (imin.QRB <= maxdist) && (imin.Dist1 <= ppath.Distance))
             {
