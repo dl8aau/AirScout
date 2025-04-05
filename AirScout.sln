@@ -83,6 +83,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirScout.PlaneFeeds.Plugin.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AirScout.PlaneFeeds.Plugin.VRSWebServer", "AirScout.PlaneFeeds.Plugin.VRSWebServer\AirScout.PlaneFeeds.Plugin.VRSWebServer.csproj", "{5C096747-2BF0-4D36-BAA7-226CF71619A4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlanePathTest", "PlanePath\PlanePathTest.csproj", "{0064AAC5-A558-4B7D-BD5B-4EEB73E6127C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
