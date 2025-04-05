@@ -2473,6 +2473,121 @@ namespace AirScout.Aircrafts
 
         }
 
+        /// <summary>
+        /// Given the PlaneInfo plane on a certain airplane and the propagation path ppath
+        /// do some heuristics to estimate if a plane has "potential"
+        ///     100 plane is currently visible from both ends
+        ///      75 plane will be visible soon
+        ///      50 plane crosses or will cross path, but is too low
+        ///       0 plane is not usable
+        /// </summary>
+        /// <param name="plane"></param>
+        /// <param name="ppath"></param>
+        /// <param name="maxdist"></param>
+        /// <param name="maxalt"></param>
+        public void ComputePlanePotential(ref PlaneInfo plane, PropagationPathDesignator ppath, double maxdist, double maxalt)
+        {
+            // calculate four possible intersections
+            // i1 -->       plane heading
+            // i2 -->       plane heading +90°
+            // i3 -->       plane heading - 90°
+            // i4 -->       opposite plane heading
+            // imin -->     intpoint with shortest distance
+
+            IntersectionPoint imin = null;
+            IntersectionPoint i1 = null;
+            IntersectionPoint i2 = null;
+            IntersectionPoint i3 = null;
+            IntersectionPoint i4 = null;
+            Stopwatch st = new Stopwatch();
+            i1 = ppath.GetIntersectionPoint(plane.Lat, plane.Lon, plane.Track, 0);
+            i2 = ppath.GetIntersectionPoint(plane.Lat, plane.Lon, ppath.Bearing12 - 90, 0);
+            // calculate right opposite direction only if no left intersection was found
+            if (i2 == null)
+                i3 = ppath.GetIntersectionPoint(plane.Lat, plane.Lon, ppath.Bearing12 + 90, 0);
+            // calcalute opposite direction only if no forward intersection was found
+            if (i1 == null)
+                i4 = ppath.GetIntersectionPoint(plane.Lat, plane.Lon, plane.Track - 180, 0);
+            // find the minimum distance first
+            if (i1 != null)
+                imin = i1;
+            if ((i2 != null) && ((imin == null) || (i2.QRB < imin.QRB)))
+                imin = i2;
+            if ((i3 != null) && ((imin == null) || (i3.QRB < imin.QRB)))
+                imin = i3;
+            if ((i4 != null) && ((imin == null) || (i4.QRB < imin.QRB)))
+                imin = i4;
+            // check hot planes which are very near the path first
+            if ((imin != null) && (imin.QRB <= maxdist) && (imin.Dist1 <= ppath.Distance))
+            {
+                // plane is near path
+                // use the minimum qrb info
+                plane.IntPoint = new LatLon.GPoint(imin.Lat, imin.Lon);
+                plane.IntQRB = imin.QRB;
+                plane.AltDiff = plane.Alt_m - imin.Min_H;
+                double c1 = LatLon.Bearing(plane.IntPoint.Lat, plane.IntPoint.Lon, ppath.Lat2, ppath.Lon2);
+                double c2 = plane.Track;
+                double ca = c1 - c2;
+                if (ca < 0)
+                    ca = ca + 360;
+                if ((ca > 180) && (ca < 360))
+                    ca = 360 - ca;
+                // save in rad 
+                plane.Angle = ca / 180.0 * Math.PI;
+                //  elevation angle (of aircraft seen from transmitter’s horizontal plane)
+                plane.Eps1 = Propagation.EpsilonFromHeights(ppath.h1, imin.Dist1, plane.Alt_m, ppath.Radius);
+                plane.Eps2 = Propagation.EpsilonFromHeights(ppath.h2, imin.Dist2, plane.Alt_m, ppath.Radius);
+                // angle of incidence (angle between incoming wave front and aircrafts horizontal plane)
+                plane.Theta1 = Propagation.ThetaFromHeights(ppath.h1, imin.Dist1, plane.Alt_m, ppath.Radius);
+                plane.Theta2 = Propagation.ThetaFromHeights(ppath.h2, imin.Dist2, plane.Alt_m, ppath.Radius);
+                plane.Squint = Math.Abs(Propagation.ThetaFromHeights(ppath.h1, imin.Dist1, plane.Alt_m, ppath.Radius) - Propagation.ThetaFromHeights(ppath.h2, imin.Dist2, plane.Alt_m, ppath.Radius));
+                if (plane.AltDiff > 0)
+                {
+                    // plane is high enough
+                    plane.Potential = 100;
+                }
+                else if (imin.Min_H <= maxalt)
+                {
+                    // plane is not high enough yet but might be in the future
+                    plane.Potential = 50;
+                }
+                else
+                {
+                    // minimal needed altitude is higher than Planes_MaxAlt --> no way to reach
+                    // plane is not interesting
+                    plane.Potential = 0;
+                }
+            }
+            else
+            {
+                // plane is far from path --> check only intersection i1 = planes moves towards path
+                if ((i1 != null) && (i1.Min_H <= maxalt) && (i1.Dist1 <= ppath.Distance))
+                {
+                    plane.IntPoint = new LatLon.GPoint(i1.Lat, i1.Lon);
+                    plane.IntQRB = i1.QRB;
+                    plane.AltDiff = plane.Alt_m - i1.Min_H;
+                    plane.Eps1 = Propagation.EpsilonFromHeights(ppath.h1, i1.Dist1, plane.Alt_m, ppath.Radius);
+                    plane.Eps2 = Propagation.EpsilonFromHeights(ppath.h2, i1.Dist2, plane.Alt_m, ppath.Radius);
+                    plane.Squint = Math.Abs(Propagation.ThetaFromHeights(ppath.h1, imin.Dist1, plane.Alt_m, ppath.Radius) - Propagation.ThetaFromHeights(ppath.h2, imin.Dist2, plane.Alt_m, ppath.Radius));
+                    if (plane.AltDiff > 0)
+                    {
+                        // plane wil cross path in a suitable altitude
+                        plane.Potential = 75;
+                    }
+                    else
+                    {
+                        // plane will cross path not in a suitable altitude
+                        plane.Potential = 50;
+                    }
+                }
+                else
+                {
+                    // plane is not interesting
+                    plane.Potential = 0;
+                }
+            }
+        }
+
         // selects all planes from a list which are in range of the midpoint of a given propagation path
         public List<PlaneInfo> GetNearestPlanes(DateTime at, PropagationPathDesignator ppath, List<PlaneInfo> planes, double maxradius, double maxdist, double maxalt)
         {
@@ -2529,109 +2644,8 @@ namespace AirScout.Aircrafts
                         info.Lon = newpos.Lon;
                         info.Time = at;
 
-                        // Test!!!
-                        if (info.Call.StartsWith("xxx"))
-                        {
-                            int k = 3;
-                        }
+                        ComputePlanePotential(ref plane, ppath, maxdist, maxalt);
 
-                        // calculate four possible intersections
-                        // i1 -->       plane heading
-                        // i2 -->       plane heading +90°
-                        // i3 -->       plane heading - 90°
-                        // i4 -->       opposite plane heading
-                        // imin -->     intpoint with shortest distance
-
-                        IntersectionPoint imin = null;
-                        IntersectionPoint i1 = null;
-                        IntersectionPoint i2 = null;
-                        IntersectionPoint i3 = null;
-                        IntersectionPoint i4 = null;
-                        Stopwatch st = new Stopwatch();
-                        i1 = ppath.GetIntersectionPoint(plane.Lat, plane.Lon, plane.Track, 0);
-                        i2 = ppath.GetIntersectionPoint(plane.Lat, plane.Lon, ppath.Bearing12 - 90, 0);
-                        // calculate right opposite direction only if no left intersection was found
-                        if (i2 == null)
-                            i3 = ppath.GetIntersectionPoint(plane.Lat, plane.Lon, ppath.Bearing12 + 90, 0);
-                        // calcalute opposite direction only if no forward intersection was found
-                        if (i1 == null)
-                            i4 = ppath.GetIntersectionPoint(plane.Lat, plane.Lon, plane.Track - 180, 0);
-                        // find the minimum distance first
-                        if (i1 != null)
-                            imin = i1;
-                        if ((i2 != null) && ((imin == null) || (i2.QRB < imin.QRB)))
-                            imin = i2;
-                        if ((i3 != null) && ((imin == null) || (i3.QRB < imin.QRB)))
-                            imin = i3;
-                        if ((i4 != null) && ((imin == null) || (i4.QRB < imin.QRB)))
-                            imin = i4;
-                        // check hot planes which are very near the path first
-                        if ((imin != null) && (imin.QRB <= maxdist) && (imin.Dist1 <= ppath.Distance))
-                        {
-                            // plane is near path
-                            // use the minimum qrb info
-                            plane.IntPoint = new LatLon.GPoint(imin.Lat, imin.Lon);
-                            plane.IntQRB = imin.QRB;
-                            plane.AltDiff = plane.Alt_m - imin.Min_H;
-                            double c1 = LatLon.Bearing(plane.IntPoint.Lat, plane.IntPoint.Lon, ppath.Lat2, ppath.Lon2);
-                            double c2 = plane.Track;
-                            double ca = c1 - c2;
-                            if (ca < 0)
-                                ca = ca + 360;
-                            if ((ca > 180) && (ca < 360))
-                                ca = 360 - ca;
-                            // save in rad 
-                            plane.Angle = ca / 180.0 * Math.PI;
-                            plane.Eps1 = Propagation.EpsilonFromHeights(ppath.h1, imin.Dist1, plane.Alt_m, ppath.Radius);
-                            plane.Eps2 = Propagation.EpsilonFromHeights(ppath.h2, imin.Dist2, plane.Alt_m, ppath.Radius);
-                            plane.Theta1 = Propagation.ThetaFromHeights(ppath.h1, imin.Dist1, plane.Alt_m, ppath.Radius);
-                            plane.Theta2 = Propagation.ThetaFromHeights(ppath.h2, imin.Dist2, plane.Alt_m, ppath.Radius);
-                            plane.Squint = Math.Abs(Propagation.ThetaFromHeights(ppath.h1, imin.Dist1, plane.Alt_m, ppath.Radius) - Propagation.ThetaFromHeights(ppath.h2, imin.Dist2, plane.Alt_m, ppath.Radius));
-                            if (plane.AltDiff > 0)
-                            {
-                                // plane is high enough
-                                plane.Potential = 100;
-                            }
-                            else if (imin.Min_H <= maxalt)
-                            {
-                                // plane is not high enough yet but might be in the future
-                                plane.Potential = 50;
-                            }
-                            else
-                            {
-                                // minimal needed altitude is higher than Planes_MaxAlt --> no way to reach
-                                // plane is not interesting
-                                plane.Potential = 0;
-                            }
-                        }
-                        else
-                        {
-                            // plane is far from path --> check only intersection i1 = planes moves towards path
-                            if ((i1 != null) && (i1.Min_H <= maxalt) && (i1.Dist1 <= ppath.Distance))
-                            {
-                                plane.IntPoint = new LatLon.GPoint(i1.Lat, i1.Lon);
-                                plane.IntQRB = i1.QRB;
-                                plane.AltDiff = plane.Alt_m - i1.Min_H;
-                                plane.Eps1 = Propagation.EpsilonFromHeights(ppath.h1, i1.Dist1, plane.Alt_m, ppath.Radius);
-                                plane.Eps2 = Propagation.EpsilonFromHeights(ppath.h2, i1.Dist2, plane.Alt_m, ppath.Radius);
-                                plane.Squint = Math.Abs(Propagation.ThetaFromHeights(ppath.h1, imin.Dist1, plane.Alt_m, ppath.Radius) - Propagation.ThetaFromHeights(ppath.h2, imin.Dist2, plane.Alt_m, ppath.Radius));
-                                if (plane.AltDiff > 0)
-                                {
-                                    // plane wil cross path in a suitable altitude
-                                    plane.Potential = 75;
-                                }
-                                else
-                                {
-                                    // plane wil cross path not in a suitable altitude
-                                    plane.Potential = 50;
-                                }
-                            }
-                            else
-                            {
-                                // plane is not interesting
-                                plane.Potential = 0;
-                            }
-                        }
 
                         // add plane to list
                         l.Add(plane);
