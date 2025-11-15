@@ -3007,9 +3007,6 @@ namespace AirScout
             }
             Properties.Settings.Default.General_WindowState = this.WindowState;
 
-            // save properties to file
-            SaveUserSettings();
-
             Say("Waiting for background threads to close...");
             // close background threads, save database and settings
             try
@@ -3106,6 +3103,9 @@ namespace AirScout
                     st.Stop();
                     Log.WriteMessage("Aircraft database saved, " + st.ElapsedMilliseconds.ToString() + " ms.");
                 }
+
+                // save properties to file
+                SaveUserSettings();
 
                 // flush the Log again in case of any exception to save all messages
                 Log.FlushLog();
